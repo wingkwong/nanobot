@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import base64
 import binascii
+import copy
 import json
 import os
 import re
@@ -682,7 +683,7 @@ class WebUITranscriptRecorder:
 
     def append(self, chat_id: str, event: dict[str, Any]) -> None:
         try:
-            dup = json.loads(json.dumps(event, ensure_ascii=False))
+            dup = copy.deepcopy(event)
             append_transcript_object(f"websocket:{chat_id}", dup)
         except (OSError, ValueError, TypeError) as e:
             self._log.warning("webui transcript append failed: {}", e)
@@ -751,7 +752,7 @@ def fork_transcript_before_user_index(
                 found_target = True
                 break
             user_index += 1
-        dup = json.loads(json.dumps(row, ensure_ascii=False))
+        dup = copy.deepcopy(row)
         if target_chat_id is not None:
             dup["chat_id"] = target_chat_id
         copied.append(dup)
@@ -798,7 +799,7 @@ def write_session_messages_as_transcript(
             for key in ("cli_apps", "mcp_presets"):
                 value = msg.get(key)
                 if isinstance(value, list) and value:
-                    row[key] = json.loads(json.dumps(value, ensure_ascii=False))
+                    row[key] = copy.deepcopy(value)
         elif role == "assistant" and text.strip():
             row = {"event": "message", "chat_id": target_chat_id, "text": text}
             media = msg.get("media")
